@@ -1,0 +1,88 @@
+from tkinter import *
+from tkinter import simpledialog
+from tkinter.filedialog import asksaveasfile, askopenfile
+
+user_title = ""
+user_date = ""
+
+def get_user_information():
+    global user_title, user_date
+    user_title = simpledialog.askstring("Input", "Enter your title:")
+    user_date = simpledialog.askstring("Input", "Enter the date:")
+    return user_title, user_date
+
+def update_window_title():
+    canvas.title(f"{user_title}'s Notepad - {user_date}")
+
+def create_notepad_window():
+    def save_file():
+        try:
+            file = asksaveasfile(mode='w', defaultextension=".txt", initialfile=f"{user_title}_{user_date}_notebook", filetypes=[('Text files', '*.txt')])
+            if file is None:
+                return
+            text = entry.get("1.0", END)
+            file.write(text)
+            file.close()
+            status_bar.config(text="File Saved")
+        except Exception as e:
+            status_bar.config(text=f"Error: {str(e)}")
+
+    def open_file():
+        try:
+            file = askopenfile(mode='r', filetypes=[('Text files', '*.txt')])
+            if file is not None:
+                content = file.read()
+                entry.delete("1.0", END)
+                entry.insert("1.0", content)
+                status_bar.config(text="File Opened")
+        except Exception as e:
+            status_bar.config(text=f"Error: {str(e)}")
+
+    def clear_file():
+        entry.delete("1.0", END)
+        status_bar.config(text="Ready")
+
+    def undo():
+        try:
+            entry.edit_undo()
+        except TclError:
+            pass
+
+    def redo():
+        try:
+            entry.edit_redo()
+        except TclError:
+            pass
+
+    global canvas
+    canvas = Tk()
+    canvas.geometry("600x400")
+    update_window_title()
+    canvas.config(bg="#2C3E50")
+
+    top = Frame(canvas, bg="#34495E")
+    top.pack(padx=10, pady=5, anchor='nw')
+
+    buttons = [
+        ("Open", open_file),
+        ("Save", save_file),
+        ("Clear", clear_file),
+        ("Undo", undo),
+        ("Redo", redo),
+    ]
+
+    for button_text, command in buttons:
+        Button(top, text=button_text, bg="#3498DB", fg="white", command=command).pack(side=LEFT, padx=5)
+
+    entry = Text(canvas, wrap="none", bg="#ECF0F1", fg="#2C3E50", font=("Helvetica", 15))
+    entry.pack(padx=10, pady=5, expand=TRUE, fill=BOTH)
+
+    global status_bar
+    status_bar = Label(canvas, text="Ready", bd=1, relief=SUNKEN, anchor=W, bg="#34495E", fg="white")
+    status_bar.pack(side=BOTTOM, fill=X)
+
+    canvas.mainloop()
+
+get_user_information()
+
+create_notepad_window()
